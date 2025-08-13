@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Montar la base de datos para persistencia
+      - ./db.sqlite:/app/db.sqlite
+      # Montar el código fuente para hot-reload
+      - ./src:/app/src:ro
+      - ./Cargo.toml:/app/Cargo.toml:ro
+      - ./Rocket.toml:/app/Rocket.toml:ro
+    environment:
+      - ROCKET_ENV=development
+      - ROCKET_LOG_LEVEL=debug
+    restart: unless-stopped 

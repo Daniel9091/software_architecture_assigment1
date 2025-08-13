@@ -17,3 +17,9 @@ fn rocket() -> _ {
         .attach(Db::init())
         .mount("/", routes![index])
 }
+
+
+
+
+
+// lanza el servidosr y registra rutas

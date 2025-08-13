@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# Rust build artifacts
+target/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+
+# Database (se copia manualmente en el Dockerfile)
+# db.sqlite 
