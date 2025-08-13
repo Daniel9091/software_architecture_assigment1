@@ -1,0 +1,2 @@
+[default.databases]
+sqlite_db = { url = "sqlite:db.sqlite" }
