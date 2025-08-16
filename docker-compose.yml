@@ -12,9 +12,11 @@ services:
       - ./db.sqlite:/app/db.sqlite
       # Montar el código fuente para hot-reload
       - ./src:/app/src:ro
+      # Montar migraciones para que estén disponibles en tiempo de compilación
+      - ./migrations:/app/migrations:ro
       - ./Cargo.toml:/app/Cargo.toml:ro
       - ./Rocket.toml:/app/Rocket.toml:ro
     environment:
       - ROCKET_ENV=development
       - ROCKET_LOG_LEVEL=debug
-    restart: unless-stopped 
+    restart: unless-stopped
