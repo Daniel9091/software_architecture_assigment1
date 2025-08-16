@@ -2,6 +2,7 @@
 
 use rocket_db_pools::{Database, sqlx};
 use rocket::fairing::AdHoc;
+use rocket::response::Redirect;
 
 mod models;
 mod db;
@@ -23,7 +24,12 @@ fn rocket() -> _ {
             }
             rocket
         }))
-        .mount("/", routes![web::index])
+        .mount("/", routes![
+            web::index,
+            web::books_index,
+            web::authors_index,
+            web::tables_index
+        ])
         .mount("/api", routes![
             routes::get_authors,
             routes::get_author,
@@ -39,8 +45,11 @@ fn rocket() -> _ {
         ])
 }
 
-
-
+#[get("/")]
+pub async fn index() -> Redirect {
+    // usar ruta literal evita depender de la resolución de uri! 
+    Redirect::to("/books")
+}
 
 
 // lanza el servidosr y registra rutas
