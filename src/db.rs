@@ -68,6 +68,69 @@ pub async fn create_author(pool: &SqlitePool, author: &CreateAuthor) -> Result<i
     Ok(id)
 }
 
+pub async fn update_author(pool: &SqlitePool, id: i32, author: &UpdateAuthor) -> Result<Option<Author>, sqlx::Error> {
+    let row = sqlx::query(
+        "UPDATE authors
+         SET name = COALESCE(?, name),
+             birth_date = COALESCE(?, birth_date),
+             country = COALESCE(?, country),
+             description = COALESCE(?, description)
+         WHERE id = ?
+         RETURNING id, name, birth_date, country, description"
+    )
+    .bind(&author.name)
+    .bind(&author.birth_date)
+    .bind(&author.country)
+    .bind(&author.description)
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| Author {
+        id: Some(row.get("id")),
+        name: row.get("name"),
+        birth_date: row.get("birth_date"),
+        country: row.get("country"),
+        description: row.get("description"),
+    }))
+}
+
+pub async fn delete_author(pool: &SqlitePool, id: i32) -> Result<(), sqlx::Error> {
+    // Primero obtener todos los libros de este autor
+    let book_ids: Vec<i32> = sqlx::query("SELECT id FROM books WHERE author_id = ?")
+        .bind(id)
+        .map(|row: sqlx::sqlite::SqliteRow| row.get("id"))
+        .fetch_all(pool)
+        .await?;
+
+    // Para cada libro, eliminar reseñas y ventas
+    for book_id in book_ids {
+        sqlx::query("DELETE FROM reviews WHERE book_id = ?")
+            .bind(book_id)
+            .execute(pool)
+            .await?;
+
+        sqlx::query("DELETE FROM yearly_sales WHERE book_id = ?")
+            .bind(book_id)
+            .execute(pool)
+            .await?;
+    }
+
+    // Luego borrar los libros del autor
+    sqlx::query("DELETE FROM books WHERE author_id = ?")
+        .bind(id)
+        .execute(pool)
+        .await?;
+
+    // Finalmente borrar el autor
+    sqlx::query("DELETE FROM authors WHERE id = ?")
+        .bind(id)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
+
 // Operaciones para Libros
 pub async fn get_all_books(pool: &SqlitePool) -> Result<Vec<BookWithAuthor>, sqlx::Error> {
     let rows = sqlx::query(
@@ -142,6 +205,62 @@ pub async fn create_book(pool: &SqlitePool, book: &CreateBook) -> Result<i32, sq
     Ok(id)
 }
 
+pub async fn update_book(pool: &SqlitePool, id: i32, book: &UpdateBook) -> Result<Option<BookWithAuthor>, sqlx::Error> {
+    let row = sqlx::query(
+        "UPDATE books
+         SET title = COALESCE(?, title),
+             summary = COALESCE(?, summary),
+             publication_date = COALESCE(?, publication_date),
+             author_id = COALESCE(?, author_id)
+         WHERE id = ?
+         RETURNING id, title, summary, publication_date, sales_count, author_id"
+    )
+    .bind(&book.title)
+    .bind(&book.summary)
+    .bind(&book.publication_date)
+    .bind(&book.author_id)
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| BookWithAuthor {
+        id: Some(row.get("id")),
+        title: row.get("title"),
+        summary: row.get("summary"),
+        publication_date: row.get("publication_date"),
+        sales_count: row.get("sales_count"),
+        author: Author {
+            id: Some(row.get("author_id")),
+            name: String::new(),          // ⚠️ Podés hacer join si querés traer el autor completo
+            birth_date: String::new(),
+            country: String::new(),
+            description: None,
+        },
+    }))
+}
+
+pub async fn delete_book(pool: &SqlitePool, id: i32) -> Result<bool, sqlx::Error> {
+    // Eliminar primero reseñas
+    sqlx::query("DELETE FROM reviews WHERE book_id = ?")
+        .bind(id)
+        .execute(pool)
+        .await?;
+
+    // Eliminar ventas
+    sqlx::query("DELETE FROM yearly_sales WHERE book_id = ?")
+        .bind(id)
+        .execute(pool)
+        .await?;
+
+    // Eliminar el libro
+    let result = sqlx::query("DELETE FROM books WHERE id = ?")
+        .bind(id)
+        .execute(pool)
+        .await?;
+
+    Ok(result.rows_affected() > 0)
+}
+
 // Operaciones para Reseñas
 pub async fn get_reviews_by_book(pool: &SqlitePool, book_id: i32) -> Result<Vec<ReviewWithBook>, sqlx::Error> {
     let rows = sqlx::query(
@@ -181,6 +300,41 @@ pub async fn create_review(pool: &SqlitePool, review: &CreateReview) -> Result<i
     Ok(id)
 }
 
+pub async fn update_review(pool: &SqlitePool, id: i32, review: &UpdateReview) -> Result<Option<ReviewWithBook>, sqlx::Error> {
+    let row = sqlx::query(
+        "UPDATE reviews
+         SET review_text = COALESCE(?, review_text),
+             rating = COALESCE(?, rating),
+             positive_votes = COALESCE(?, positive_votes)
+         WHERE id = ?
+         RETURNING id, book_id, review_text, rating, positive_votes, created_at"
+    )
+    .bind(&review.review_text)
+    .bind(&review.rating)
+    .bind(&review.positive_votes)
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| ReviewWithBook {
+        id: Some(row.get("id")),
+        book_id: row.get("book_id"),
+        book_title: String::new(), // si querés traete el título con un JOIN
+        review_text: row.get("review_text"),
+        rating: row.get("rating"),
+        positive_votes: row.get("positive_votes"),
+        created_at: row.get("created_at"),
+    }))
+}
+
+pub async fn delete_review(pool: &SqlitePool, id: i32) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM reviews WHERE id = ?")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(result.rows_affected() > 0)
+}
+
 // Operaciones para Ventas Anuales
 pub async fn get_yearly_sales_by_book(pool: &SqlitePool, book_id: i32) -> Result<Vec<YearlySalesWithBook>, sqlx::Error> {
     let rows = sqlx::query(
@@ -216,6 +370,37 @@ pub async fn create_yearly_sales(pool: &SqlitePool, sales: &CreateYearlySales) -
     .await?;
     
     Ok(id)
+}
+
+pub async fn update_yearly_sales(pool: &SqlitePool, id: i32, sales: &UpdateYearlySales) -> Result<Option<YearlySalesWithBook>, sqlx::Error> {
+    let row = sqlx::query(
+        "UPDATE yearly_sales
+         SET year = COALESCE(?, year),
+             sales = COALESCE(?, sales)
+         WHERE id = ?
+         RETURNING id, book_id, year, sales"
+    )
+    .bind(&sales.year)
+    .bind(&sales.sales)
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| YearlySalesWithBook {
+        id: Some(row.get("id")),
+        book_id: row.get("book_id"),
+        book_title: String::new(), // podés hacer join a books si querés
+        year: row.get("year"),
+        sales: row.get("sales"),
+    }))
+}
+
+pub async fn delete_yearly_sales(pool: &SqlitePool, id: i32) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM yearly_sales WHERE id = ?")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(result.rows_affected() > 0)
 }
 
 // Estadísticas generales

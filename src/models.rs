@@ -98,6 +98,38 @@ pub struct CreateYearlySales {
     pub sales: i32,
 }
 
+// DTOs para actualizar entidades
+#[derive(Debug, Deserialize)]
+pub struct UpdateAuthor {
+    pub name: Option<String>,
+    pub birth_date: Option<String>,
+    pub country: Option<String>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateBook {
+    pub title: Option<String>,
+    pub summary: Option<String>,
+    pub publication_date: Option<String>,
+    pub author_id: Option<i32>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateReview {
+    pub book_id: Option<i32>,
+    pub review_text: Option<String>,
+    pub rating: Option<i32>,
+    pub positive_votes: Option<i32>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateYearlySales {
+    pub book_id: Option<i32>,
+    pub year: Option<i32>,
+    pub sales: Option<i32>,
+}
+
 // Respuestas de la API
 #[derive(Debug, Serialize)]
 pub struct ApiResponse<T> {
