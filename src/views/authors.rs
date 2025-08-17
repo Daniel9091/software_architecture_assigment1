@@ -38,3 +38,5 @@ pub async fn authors_index(_pool: &State<Db>) -> RawHtml<String> {
     "#;
     RawHtml(render_page("Autores", body))
 }
+
+

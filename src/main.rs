@@ -3,9 +3,9 @@
 use rocket_db_pools::{Database, sqlx};
 
 mod models;
-mod db;
+mod repository;
 mod api;      
-mod routes;   
+mod views;   
 
 #[derive(Database)]
 #[database("sqlite_db")]
@@ -17,19 +17,22 @@ fn rocket() -> _ {
         .attach(Db::init())
         // Páginas HTML
         .mount("/", routes![
-            routes::index::index,
-            routes::books::books_index,
-            routes::authors::authors_index,
-            routes::tables::tables_index,
+            views::index::index,
+            views::books::books_index,
+            views::authors::authors_index,
+            views::authors::author_show,
+            views::tables::tables_index,
         ])
         // API JSON
         .mount("/api", routes![
             // Authors
             api::authors::get_authors,
+            api::authors::get_author_details,
             api::authors::get_author,
             api::authors::create_author,
             api::authors::update_author,
             api::authors::delete_author,
+
 
             // Books
             api::books::get_books,

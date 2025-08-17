@@ -1,11 +1,12 @@
 use rocket::{serde::json::Json, State};
-use crate::{models::*, db};
-use crate::models::ApiResponse;
-use crate::Db;
+use rocket::serde::Serialize;
+use rocket_db_pools::sqlx::{self, Row};
+
+use crate::{models::*, repository, Db};
 
 #[get("/authors")]
 pub async fn get_authors(pool: &State<Db>) -> Json<ApiResponse<Vec<Author>>> {
-    match db::get_all_authors(&pool.0).await {
+    match repository::get_all_authors(&pool.0).await {
         Ok(authors) => Json(ApiResponse::success(authors)),
         Err(_) => Json(ApiResponse::<Vec<Author>>::error("Error al obtener autores")),
     }
@@ -13,7 +14,7 @@ pub async fn get_authors(pool: &State<Db>) -> Json<ApiResponse<Vec<Author>>> {
 
 #[get("/authors/<id>")]
 pub async fn get_author(id: i32, pool: &State<Db>) -> Json<ApiResponse<Author>> {
-    match db::get_author_by_id(&pool.0, id).await {
+    match repository::get_author_by_id(&pool.0, id).await {
         Ok(Some(author)) => Json(ApiResponse::success(author)),
         Ok(None) => Json(ApiResponse::<Author>::error("Autor no encontrado")),
         Err(_) => Json(ApiResponse::<Author>::error("Error al obtener autor")),
@@ -22,7 +23,7 @@ pub async fn get_author(id: i32, pool: &State<Db>) -> Json<ApiResponse<Author>> 
 
 #[post("/authors", data = "<author>")]
 pub async fn create_author(author: Json<CreateAuthor>, pool: &State<Db>) -> Json<ApiResponse<i32>> {
-    match db::create_author(&pool.0, &author).await {
+    match repository::create_author(&pool.0, &author).await {
         Ok(id) => Json(ApiResponse::success(id)),
         Err(_) => Json(ApiResponse::<i32>::error("Error al crear autor")),
     }
@@ -30,7 +31,7 @@ pub async fn create_author(author: Json<CreateAuthor>, pool: &State<Db>) -> Json
 
 #[put("/authors/<id>", data = "<author_update>")]
 pub async fn update_author(id: i32, author_update: Json<UpdateAuthor>, pool: &State<Db>) -> Json<ApiResponse<Author>> {
-    match db::update_author(&pool.0, id, &author_update).await {
+    match repository::update_author(&pool.0, id, &author_update).await {
         Ok(Some(author)) => Json(ApiResponse::success(author)),
         Ok(None) => Json(ApiResponse::<Author>::error("Autor no encontrado")),
         Err(_) => Json(ApiResponse::<Author>::error("Error al actualizar autor")),
@@ -39,8 +40,64 @@ pub async fn update_author(id: i32, author_update: Json<UpdateAuthor>, pool: &St
 
 #[delete("/authors/<id>")]
 pub async fn delete_author(id: i32, pool: &State<Db>) -> Json<ApiResponse<()>> {
-    match db::delete_author(&pool.0, id).await {
+    match repository::delete_author(&pool.0, id).await {
         Ok(_) => Json(ApiResponse::success(())),
         Err(_) => Json(ApiResponse::<()>::error("Error al eliminar autor")),
     }
+}
+
+/// DTO liviano para la lista de libros del autor
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct BookSummary {
+    pub id: i32,
+    pub title: String,
+    pub published_year: Option<i32>,
+}
+
+/// Respuesta compuesta para el Show de autor
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct AuthorDetails {
+    pub author: Author,
+    pub books: Vec<BookSummary>,
+}
+
+/// GET /api/authors/<id>/details
+#[get("/authors/<id>/details")]
+pub async fn get_author_details(id: i32, pool: &State<Db>) -> Json<ApiResponse<AuthorDetails>> {
+    // 1) Autor
+    let author_opt = repository::get_author_by_id(&pool.0, id)
+        .await
+        .ok()
+        .flatten();
+
+    let Some(author) = author_opt else {
+        return Json(ApiResponse::<AuthorDetails>::error("Autor no encontrado"));
+    };
+
+    // 2) Libros del autor (sin macros; usamos `query` + `Row`)
+    let rows = sqlx::query(
+        r#"
+        SELECT id, title, published_year
+        FROM books
+        WHERE author_id = ?
+        ORDER BY published_year DESC, title ASC
+        "#,
+    )
+    .bind(id)
+    .fetch_all(&pool.0)
+    .await
+    .unwrap_or_default();
+
+    let books = rows
+        .into_iter()
+        .map(|row| BookSummary {
+            id: row.get::<i32, _>("id"),
+            title: row.get::<String, _>("title"),
+            published_year: row.get::<Option<i32>, _>("published_year"),
+        })
+        .collect::<Vec<_>>();
+
+    Json(ApiResponse::success(AuthorDetails { author, books }))
 }
