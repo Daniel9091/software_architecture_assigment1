@@ -1,13 +1,11 @@
 #[macro_use] extern crate rocket;
 
 use rocket_db_pools::{Database, sqlx};
-use rocket::fairing::AdHoc;
-use rocket::response::Redirect;
 
 mod models;
 mod db;
-mod routes;
-mod web;
+mod api;      
+mod routes;   
 
 #[derive(Database)]
 #[database("sqlite_db")]
@@ -17,47 +15,43 @@ struct Db(sqlx::SqlitePool);
 fn rocket() -> _ {
     rocket::build()
         .attach(Db::init())
-        .attach(AdHoc::on_ignite("Initialize Database", |rocket| async move {
-            let pool = Db::fetch(&rocket).unwrap();
-            if let Err(e) = db::init_database(&pool.0).await {
-                eprintln!("Error initializing database: {}", e);
-            }
-            rocket
-        }))
+        // Páginas HTML
         .mount("/", routes![
-            web::index,
-            web::books_index,
-            web::authors_index,
-            web::tables_index
+            routes::index::index,
+            routes::books::books_index,
+            routes::authors::authors_index,
+            routes::tables::tables_index,
         ])
+        // API JSON
         .mount("/api", routes![
-            routes::get_authors,
-            routes::get_author,
-            routes::create_author,
-            routes::update_author,
-            routes::delete_author,
-            routes::get_books,
-            routes::get_book,
-            routes::create_book,
-            routes::update_book,
-            routes::delete_book,
-            routes::get_book_reviews,
-            routes::create_review,
-            routes::update_review,
-            routes::delete_review,
-            routes::get_book_sales,
-            routes::create_yearly_sales,
-            routes::update_yearly_sales,
-            routes::delete_yearly_sales,
-            routes::get_dashboard_stats,
+            // Authors
+            api::authors::get_authors,
+            api::authors::get_author,
+            api::authors::create_author,
+            api::authors::update_author,
+            api::authors::delete_author,
+
+            // Books
+            api::books::get_books,
+            api::books::get_book,
+            api::books::create_book,
+            api::books::update_book,
+            api::books::delete_book,
+
+            // Reviews
+            api::reviews::get_book_reviews,
+            api::reviews::create_review,
+            api::reviews::update_review,
+            api::reviews::delete_review,
+
+            // Sales
+            api::sales::get_book_sales,
+            api::sales::create_yearly_sales,
+            api::sales::update_yearly_sales,
+            api::sales::delete_yearly_sales,
+
+            // Dashboard
+            api::dashboard::get_dashboard_stats,
         ])
+
 }
-
-#[get("/")]
-pub async fn index() -> Redirect {
-    // usar ruta literal evita depender de la resolución de uri! 
-    Redirect::to("/books")
-}
-
-
-// lanza el servidosr y registra rutas

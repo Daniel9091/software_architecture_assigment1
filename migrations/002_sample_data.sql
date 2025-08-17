@@ -1,5 +1,6 @@
 -- Insertar autores
 INSERT INTO authors (id, name, birth_date, country, description) VALUES
+(0,'Homer','0800-01-01','Greece','Autor de las epopeyas clásicas la Ilíada y la Odisea'),
 (1, 'George MacDonald', '1920-09-07', 'Colombia', 'Escritor reconocido internacionalmente.'),
 (2, 'L. Frank Baum', '1973-02-23', 'México', 'Poeta y novelista con gran trayectoria.'),
 (3, 'Edith Nesbit', '1904-03-28', 'Chile', 'Figura influyente en la literatura moderna.'),
