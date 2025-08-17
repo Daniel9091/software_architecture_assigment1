@@ -2,7 +2,6 @@ use rocket::response::content::RawHtml;
 use rocket::response::Redirect;
 use rocket::State;
 use crate::Db;
-use crate::db;
 
 /// HTML de la barra inferior compartida
 fn bottom_nav_html() -> String {
@@ -64,19 +63,23 @@ pub async fn books_index(_pool: &State<Db>) -> RawHtml<String> {
           try {
             const res = await fetch('/api/books');
             if (!res.ok) throw new Error(res.statusText);
-            const data = await res.json();
+            const wrapper = await res.json();
+            if (!wrapper || !wrapper.success) throw new Error(wrapper?.message || 'Respuesta inválida');
+            const data = wrapper.data || [];
             const list = document.getElementById('list');
             list.innerHTML = '';
             if (!Array.isArray(data) || data.length === 0) {
               list.innerHTML = '<li>No hay libros</li>';
+              document.querySelector('.loading').style.display = 'none';
               return;
             }
             for (const b of data) {
               const li = document.createElement('li');
-              // intenta mostrar título/autores/any demás campos disponibles
-              li.textContent = b.title ?? JSON.stringify(b);
+              const authorName = (b.author && b.author.name) ? b.author.name : (b.author_name || 'Autor desconocido');
+              li.textContent = (b.title ? b.title : JSON.stringify(b)) + ' — ' + authorName;
               list.appendChild(li);
             }
+            document.querySelector('.loading').style.display = 'none';
           } catch (err) {
             document.querySelector('.loading').textContent = 'Error cargando libros: ' + err;
           }
@@ -98,11 +101,14 @@ pub async fn authors_index(_pool: &State<Db>) -> RawHtml<String> {
           try {
             const res = await fetch('/api/authors');
             if (!res.ok) throw new Error(res.statusText);
-            const data = await res.json();
+            const wrapper = await res.json();
+            if (!wrapper || !wrapper.success) throw new Error(wrapper?.message || 'Respuesta inválida');
+            const data = wrapper.data || [];
             const list = document.getElementById('list');
             list.innerHTML = '';
             if (!Array.isArray(data) || data.length === 0) {
               list.innerHTML = '<li>No hay autores</li>';
+              document.querySelector('.loading').style.display = 'none';
               return;
             }
             for (const a of data) {
@@ -110,6 +116,7 @@ pub async fn authors_index(_pool: &State<Db>) -> RawHtml<String> {
               li.textContent = a.name ?? JSON.stringify(a);
               list.appendChild(li);
             }
+            document.querySelector('.loading').style.display = 'none';
           } catch (err) {
             document.querySelector('.loading').textContent = 'Error cargando autores: ' + err;
           }
@@ -123,15 +130,18 @@ pub async fn authors_index(_pool: &State<Db>) -> RawHtml<String> {
 /// Página índice de tablas (lista tablas o información útil desde /api/tables)
 #[get("/tables")]
 pub async fn tables_index(_pool: &State<Db>) -> RawHtml<String> {
+    // la API expone estadísticas en /api/dashboard, usar eso aquí
     let body = r#"
       <p class="loading">Cargando tablas...</p>
       <pre id="info"></pre>
       <script>
         async function load() {
           try {
-            const res = await fetch('/api/tables');
+            const res = await fetch('/api/dashboard');
             if (!res.ok) throw new Error(res.statusText);
-            const data = await res.json();
+            const wrapper = await res.json();
+            if (!wrapper || !wrapper.success) throw new Error(wrapper?.message || 'Respuesta inválida');
+            const data = wrapper.data || wrapper;
             document.getElementById('info').textContent = JSON.stringify(data, null, 2);
             document.querySelector('.loading').style.display = 'none';
           } catch (err) {
