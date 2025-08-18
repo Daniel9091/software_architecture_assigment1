@@ -52,8 +52,9 @@ pub async fn delete_author(id: i32, pool: &State<Db>) -> Json<ApiResponse<()>> {
 pub struct BookSummary {
     pub id: i32,
     pub title: String,
-    pub published_year: Option<i32>,
+    pub publication_date: Option<i32>,
 }
+
 
 /// Respuesta compuesta para el Show de autor
 #[derive(Serialize)]
@@ -77,12 +78,15 @@ pub async fn get_author_details(id: i32, pool: &State<Db>) -> Json<ApiResponse<A
     };
 
     // 2) Libros del autor (sin macros; usamos `query` + `Row`)
-    let rows = sqlx::query(
+       let rows = sqlx::query(
         r#"
-        SELECT id, title, published_year
+        SELECT 
+        id, 
+        title, 
+        CAST(strftime('%Y', publication_date) AS INTEGER) AS publication_date
         FROM books
         WHERE author_id = ?
-        ORDER BY published_year DESC, title ASC
+        ORDER BY publication_date DESC, title ASC
         "#,
     )
     .bind(id)
@@ -92,12 +96,11 @@ pub async fn get_author_details(id: i32, pool: &State<Db>) -> Json<ApiResponse<A
 
     let books = rows
         .into_iter()
-        .map(|row| BookSummary {
-            id: row.get::<i32, _>("id"),
-            title: row.get::<String, _>("title"),
-            published_year: row.get::<Option<i32>, _>("published_year"),
+        .map(|r| BookSummary {
+            id: r.get("id"),
+            title: r.get("title"),
+            publication_date: r.get("publication_date"),
         })
-        .collect::<Vec<_>>();
-
+        .collect();
     Json(ApiResponse::success(AuthorDetails { author, books }))
 }

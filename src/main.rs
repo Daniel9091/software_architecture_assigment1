@@ -20,7 +20,7 @@ fn rocket() -> _ {
             views::index::index,
             views::books::books_index,
             views::authors::authors_index,
-            //views::authors::author_show,
+            views::authors::authors_show,
             views::tables::tables_index,
             views::books_form::new_book_form,
             views::books_form::books_create,
