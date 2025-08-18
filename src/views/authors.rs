@@ -17,6 +17,8 @@ pub async fn authors_index(_pool: &State<Db>) -> RawHtml<String> {
         #addForm .row { margin:.35rem 0; }
         #addForm input[type='text'], #addForm input[type='date'], #addForm textarea { width: 100%; max-width: 420px; padding:.35rem; }
         #msg { margin-top:.25rem; }
+        #search { margin:.5rem 0 1rem; }
+        #search input { width: 100%; max-width: 320px; padding:.35rem; }
       </style>
 
       <p class="loading">Cargando autores...</p>
@@ -47,11 +49,17 @@ pub async fn authors_index(_pool: &State<Db>) -> RawHtml<String> {
         </form>
       </div>
 
+      <div id="search">
+        <input type="text" id="searchInput" placeholder="🔎 Buscar autor por nombre...">
+      </div>
+
       <ul id="list"></ul>
 
       <script>
         const loadingEl = document.querySelector('.loading');
         const list = document.getElementById('list');
+        const searchInput = document.getElementById('searchInput');
+        let authorsData = [];
 
         async function load() {
           try {
@@ -59,33 +67,43 @@ pub async fn authors_index(_pool: &State<Db>) -> RawHtml<String> {
             if (!res.ok) throw new Error(res.statusText);
             const wrapper = await res.json();
             if (!wrapper || !wrapper.success) throw new Error((wrapper && wrapper.message) || 'Respuesta inválida');
-            const data = wrapper.data || [];
-            list.innerHTML = '';
-            if (!Array.isArray(data) || data.length === 0) {
-              list.innerHTML = '<li>No hay autores</li>';
-              loadingEl.style.display = 'none';
-              return;
-            }
-            for (const a of data) {
-              const li = document.createElement('li');
-
-              const name = document.createElement('span');
-              name.textContent = a.name ?? '(sin nombre)';
-
-              const btn = document.createElement('a');
-              btn.className = 'btn';
-              btn.textContent = 'Ver';
-              btn.href = '/authors/' + a.id;
-
-              li.appendChild(name);
-              li.appendChild(btn);
-              list.appendChild(li);
-            }
+            authorsData = wrapper.data || [];
+            render(authorsData);
             loadingEl.style.display = 'none';
           } catch (err) {
             loadingEl.textContent = 'Error cargando autores: ' + err;
           }
         }
+
+        function render(data) {
+          list.innerHTML = '';
+          if (!Array.isArray(data) || data.length === 0) {
+            list.innerHTML = '<li>No hay autores</li>';
+            return;
+          }
+          for (const a of data) {
+            const li = document.createElement('li');
+
+            const name = document.createElement('span');
+            name.textContent = a.name ?? '(sin nombre)';
+
+            const btn = document.createElement('a');
+            btn.className = 'btn';
+            btn.textContent = 'Ver';
+            btn.href = '/authors/' + a.id;
+
+            li.appendChild(name);
+            li.appendChild(btn);
+            list.appendChild(li);
+          }
+        }
+
+        // Filtro de búsqueda
+        searchInput.addEventListener('input', () => {
+          const q = searchInput.value.toLowerCase();
+          const filtered = authorsData.filter(a => (a.name || '').toLowerCase().includes(q));
+          render(filtered);
+        });
 
         // Toggle del formulario de alta
         const toggleAdd = document.getElementById('toggleAdd');
@@ -141,6 +159,7 @@ pub async fn authors_index(_pool: &State<Db>) -> RawHtml<String> {
     "#;
     RawHtml(render_page("Autores", body))
 }
+
 
 #[get("/authors/<_id>")]
 pub async fn authors_show(_id: i32, _pool: &State<Db>) -> RawHtml<String> {
