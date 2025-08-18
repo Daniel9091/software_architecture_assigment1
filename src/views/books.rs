@@ -6,6 +6,10 @@ use super::layout::render_page;
 #[get("/books")]
 pub async fn books_index(_pool: &State<Db>) -> RawHtml<String> {
     let body = r#"
+      <a href="/books/new">
+        <button style="margin-bottom: 1em;">Crear libro</button>
+      </a>
+
       <p class="loading">Cargando libros...</p>
       <ul id="list"></ul>
       <script>
@@ -26,7 +30,8 @@ pub async fn books_index(_pool: &State<Db>) -> RawHtml<String> {
             for (const b of data) {
               const li = document.createElement('li');
               const authorName = (b.author && b.author.name) ? b.author.name : (b.author_name || 'Autor desconocido');
-              li.textContent = (b.title ? b.title : JSON.stringify(b)) + ' — ' + authorName;
+              li.innerHTML = (b.title ? b.title : JSON.stringify(b)) + ' — ' + authorName
+                + ` <a href="/books/${b.id}"><button>Ver</button></a>`;
               list.appendChild(li);
             }
             document.querySelector('.loading').style.display = 'none';

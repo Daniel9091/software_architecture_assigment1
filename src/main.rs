@@ -20,8 +20,17 @@ fn rocket() -> _ {
             views::index::index,
             views::books::books_index,
             views::authors::authors_index,
-            views::authors::author_show,
+            //views::authors::author_show,
             views::tables::tables_index,
+            views::books_form::new_book_form,
+            views::books_form::books_create,
+            views::books_form::edit_book_form,
+            views::books_form::books_update,
+            views::books_show::books_show,
+            views::reviews_form::new_review_form,
+            views::reviews_form::reviews_create,
+            views::reviews_form::edit_review_form,
+            views::reviews_form::reviews_update,
         ])
         // API JSON
         .mount("/api", routes![
