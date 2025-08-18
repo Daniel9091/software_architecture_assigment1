@@ -1,7 +1,9 @@
 use rocket::{serde::json::Json, State};
-use crate::{models::*, repository};
-use crate::models::ApiResponse;
-use crate::Db;
+use serde::Serialize;
+
+use crate::{Db, repository};
+use crate::repository::books as books_repo;
+use crate::models::{ApiResponse, BookWithAuthor, CreateBook, UpdateBook};
 
 #[get("/books")]
 pub async fn get_books(pool: &State<Db>) -> Json<ApiResponse<Vec<BookWithAuthor>>> {
@@ -43,5 +45,36 @@ pub async fn delete_book(id: i32, pool: &State<Db>) -> Json<ApiResponse<()>> {
         Ok(true) => Json(ApiResponse::success(())),
         Ok(false) => Json(ApiResponse::<()>::error("Libro no encontrado")),
         Err(_) => Json(ApiResponse::<()>::error("Error al eliminar libro")),
+    }
+}
+
+#[derive(Serialize)]
+struct Paged<T> {
+    items: Vec<T>,
+    total: i64,
+    page: i64,
+    per_page: i64,
+    query: String,
+}
+
+#[get("/books/search?<q>&<page>&<per_page>")]
+pub async fn search_books(
+    q: &str,
+    page: Option<i64>,
+    per_page: Option<i64>,
+    pool: &State<Db>,
+) -> Json<ApiResponse<Paged<BookWithAuthor>>> {
+    let page = page.unwrap_or(1);
+    let per_page = per_page.unwrap_or(10);
+
+    match books_repo::search_books_by_description(&pool.0, q, page, per_page).await {
+        Ok((items, total)) => Json(ApiResponse::success(Paged {
+            items,
+            total,
+            page,
+            per_page,
+            query: q.to_string(),
+        })),
+        Err(_) => Json(ApiResponse::error("Error en la búsqueda")),
     }
 }
