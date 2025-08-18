@@ -6,6 +6,12 @@ use super::layout::render_page;
 #[get("/books")]
 pub async fn books_index(_pool: &State<Db>) -> RawHtml<String> {
     let body = r#"
+      <!-- Search bar -->
+      <form action="/books/search" method="get" style="margin-bottom: 1em;">
+        <input type="text" name="q" id="searchInput" placeholder="Buscar libros..." />
+        <button type="submit">Buscar</button>
+      </form>
+
       <a href="/books/new">
         <button style="margin-bottom: 1em;">Crear libro</button>
       </a>
