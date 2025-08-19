@@ -32,6 +32,8 @@ fn rocket() -> _ {
             views::reviews_form::edit_review_form,
             views::reviews_form::reviews_update,
             views::books_search::books_search_page,
+            views::sales::sales_by_book,
+
         ])
         // API JSON
         .mount("/api", routes![
