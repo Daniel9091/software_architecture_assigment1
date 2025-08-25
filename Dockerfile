@@ -10,7 +10,7 @@ WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 
-# (opcional) cachear deps
+# cachear deps
 RUN cargo fetch || true
 
 # Resto

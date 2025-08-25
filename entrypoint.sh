@@ -26,8 +26,7 @@ fi
 
 echo "[entrypoint] iniciando app..."
 
-# Opción A: con hot-reload (cargo-watch)
+
 exec /usr/local/cargo/bin/cargo watch -x 'run --release'
 
-# Opción B (sin hot-reload): comenta la línea de arriba y descomenta esta:
-# exec /usr/local/cargo/bin/cargo run --release
+

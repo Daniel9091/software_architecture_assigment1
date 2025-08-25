@@ -11,9 +11,9 @@ services:
       - ROCKET_ADDRESS=0.0.0.0
       - ROCKET_PORT=8000
     volumes:
-      - dbdata:/data            # <- Volumen persistente para la DB
-      - ./src:/app/src          # hot-reload
-      - rust_target:/app/target # cache de compilación
+      - dbdata:/data
+      - ./src:/app/src
+      - rust_target:/app/target
       - ./migrations:/app/migrations:ro
       - ./Cargo.toml:/app/Cargo.toml:ro
       - ./Cargo.lock:/app/Cargo.lock:ro
