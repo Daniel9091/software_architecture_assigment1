@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -7,16 +5,21 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    volumes:
-      # Montar la base de datos para persistencia
-      - ./db.sqlite:/app/db.sqlite
-      # Montar el código fuente para hot-reload
-      - ./src:/app/src:ro
-      # Montar migraciones para que estén disponibles en tiempo de compilación
-      - ./migrations:/app/migrations:ro
-      - ./Cargo.toml:/app/Cargo.toml:ro
-      - ./Rocket.toml:/app/Rocket.toml:ro
     environment:
       - ROCKET_ENV=development
       - ROCKET_LOG_LEVEL=debug
+      - ROCKET_ADDRESS=0.0.0.0
+      - ROCKET_PORT=8000
+    volumes:
+      - dbdata:/data            # <- Volumen persistente para la DB
+      - ./src:/app/src          # hot-reload
+      - rust_target:/app/target # cache de compilación
+      - ./migrations:/app/migrations:ro
+      - ./Cargo.toml:/app/Cargo.toml:ro
+      - ./Cargo.lock:/app/Cargo.lock:ro
+      - ./Rocket.toml:/app/Rocket.toml:ro
     restart: unless-stopped
+
+volumes:
+  dbdata:
+  rust_target:
