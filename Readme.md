@@ -2,11 +2,13 @@
 
 Aplicación web con Rust y SQLite, configurada para desarrollo con Docker.
 
-## 🚀 Inicio Rápido
+## 🚀 Comandos para incio Rapido
 
-### Prerrequisitos
+### Prerrequisitos (revisar)
 - Docker
 - Docker Compose
+- Cargo (preguntar)
+- SQLite
 
 ### Pasos de Inicialización
 ```bash
@@ -14,29 +16,28 @@ Aplicación web con Rust y SQLite, configurada para desarrollo con Docker.
 git clone <tu-repo>
 cd software_architecture_assigment1
 
-# 2. Levantar la aplicación
+# 2. Constuir aplicacion
+docker-compose up --build
+
+# 3. Levantar la aplicación
 docker-compose up -d
 
-# 3. Probar que funciona
+# 4. Probar que funciona
 curl http://localhost:8000/
-# Debe responder: "Hola, Rocket + SQLite!"
 ```
 
-## ⚡ Comandos de Docker - Explicación Detallada
+## Explicacion de los comandos importantes
 
-### 🐌 Comandos LENTOS (solo cuando sea necesario)
+### 🐢 Comandos Lentos (solo en caso de ser nesesarios)
 
 #### `docker-compose build`
+
 - **Tiempo**: 10-15 minutos
 - **Qué hace**: Construye la imagen de Docker desde cero
 - **Cuándo usar**: Solo cuando cambies el Dockerfile o primera vez
 - **Base de datos**: NO la afecta
-
-#### `docker-compose up --build`
-- **Tiempo**: 10-15 minutos
-- **Qué hace**: Construye imagen + levanta contenedor
-- **Cuándo usar**: Solo la primera vez que configures el proyecto
-- **Base de datos**: NO la afecta
+- **Variacion para levantar APP**: `docker-compose up --build`
+- **Variacion para limpieza profunda**: `docker-compose build --no-cache`
 
 ### ⚡ Comandos RÁPIDOS (desarrollo diario)
 
@@ -70,59 +71,20 @@ curl http://localhost:8000/
 - **Qué hace**: Muestra el estado de los servicios
 - **Cuándo usar**: Para verificar si la app está corriendo
 
-## 🔄 Flujo de Desarrollo
 
-### Configuración Inicial (UNA SOLA VEZ)
-```bash
-docker-compose build          # 10-15 minutos
-docker-compose up -d          # 2-3 segundos
-```
 
-### Desarrollo Diario
-```bash
-# 1. Hacer cambios en src/main.rs
-# 2. Guardar archivo
-# 3. Reiniciar app (NO reconstruir)
-docker-compose restart app    # ⚡ 2-3 segundos
 
-# 4. Ver logs para confirmar cambios
-docker-compose logs -f app
-```
+## 🐦📁 Base de datos (db.sqlite)
 
-### Para Detener
-```bash
-docker-compose down           # 1-2 segundos
-```
+- NUNCA se reinicia con restart o up
+- Datos persisten ente reinicicios
+- Solo se pierden los datos si se elimina manualmente el archivo 
 
-## 📁 ¿Qué Archivos/Carpetas Afecta Cada Comando?
 
-### **Código Fuente (src/):**
-- **Cambios automáticos**: Los archivos .rs se montan como volumen
-- **Comando para aplicar**: `docker-compose restart app` (2-3 seg)
 
-### **Base de Datos (db.sqlite):**
-- **NUNCA se reinicia** con restart o up
-- **Datos persisten** entre reinicios
-- **Solo se pierde** si eliminas manualmente el archivo
 
-### **Configuración (Dockerfile, docker-compose.yml):**
-- **Requiere**: `docker-compose build` (10-15 min)
-- **NO se aplica** con restart
 
-## 🎯 Comandos Esenciales para Memorizar
-
-```bash
-# Desarrollo diario (RÁPIDOS):
-docker-compose up -d          # Levantar
-docker-compose restart app    # Reiniciar (para cambios de código) ⭐
-docker-compose logs -f app    # Ver logs
-docker-compose down           # Detener
-
-# Solo cuando sea necesario (LENTOS):
-docker-compose build          # Reconstruir imagen
-```
-
-## 🛠️ Alternativa con Make (Segunda Opción)
+## 🛠️ Alternativa con Make (Segunda Opción) (preguntar si ya se elimino)
 
 Si prefieres comandos más cortos, puedes usar Make:
 
@@ -135,12 +97,3 @@ make down      # = docker-compose down
 make build     # = docker-compose build
 ```
 
-## 📝 Resumen Final
-
-- **Primera vez**: `docker-compose build` (10-15 min) + `docker-compose up -d`
-- **Cambios de código**: `docker-compose restart app` (2-3 seg)
-- **Base de datos**: NUNCA se reinicia, datos persisten
-- **Ver logs**: `docker-compose logs -f app`
-- **Detener**: `docker-compose down`
-
-**¡Nunca uses `docker-compose build` para cambios de código! Solo `restart app`** ⚡
