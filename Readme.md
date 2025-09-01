@@ -80,7 +80,11 @@ curl http://localhost:8000/
 - Datos persisten ente reinicicios
 - Solo se pierden los datos si se elimina manualmente el archivo 
 
-
+## Caché (redis)
+- Reducion tiempo de respuesta
+- Dsiminucio de carga para BBDD
+- **Ventajas de Redis**: por mas documentacion y robustez
+- **Desventajas de Redis**: Mayor consumo de memoria y ligeramente mas compleja
 
 
 

@@ -6,15 +6,39 @@ mod models;
 mod repository;
 mod api;      
 mod views;   
+mod cache;
 
 #[derive(Database)]
 #[database("sqlite_db")]
 struct Db(sqlx::SqlitePool);
 
+// Función para inicializar la conexión a Redis y manejar errores
+async fn init_cache(rocket: rocket::Rocket<rocket::Build>) -> Result<rocket::Rocket<rocket::Build>, rocket::Rocket<rocket::Build>> {
+    let redis_url = rocket.figment().extract_inner("redis_url")
+        .unwrap_or_else(|_| "redis://redis:6379".to_string());
+    
+    match cache::Cache::new(&redis_url).await {
+        Ok(cache) => {
+            println!("✅ Cache Redis inicializado correctamente");
+            Ok(rocket.manage(cache))
+        },
+        Err(e) => {
+            eprintln!("⚠️  Redis no disponible: {}", e);
+            eprintln!("⚠️  Continuando sin cache Redis");
+            Ok(rocket) // Continuar sin cache
+        }
+    }
+}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
         .attach(Db::init())
+        // Inicializar Redis Cache
+        .attach(rocket::fairing::AdHoc::on_ignite("Redis Cache", |rocket| async move {
+            init_cache(rocket).await.unwrap()
+        }))
+
         // Páginas HTML
         .mount("/", routes![
             views::index::index,

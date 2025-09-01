@@ -1,4 +1,4 @@
-FROM rust:1.82-slim
+FROM rust:1.85-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libsqlite3-dev sqlite3 pkg-config ca-certificates build-essential \
