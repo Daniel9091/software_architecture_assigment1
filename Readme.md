@@ -100,3 +100,29 @@ curl http://localhost:8000/
 
 - **BB8**: Se encarga de las consecciones de pulling
 - **Cache.rs**: Archivo encargado de gestionar caché
+- caché de 5 minutos para casi todas las rutas API
+
+### Visualisacion del Archvio de Caché
+En otra terminal ingrese este comando para conecarse al cache
+
+`docker exec -it software_architecture_assigment1-redis-1 redis-cli`
+
+Para ver las claves que contiene en la terminal emergente ejecute
+
+`KEYS *`
+
+Para ver una clave espesifica
+
+`KEYS {CLAVE}:*`
+
+Para ver el contenido espesifico de la clave
+
+`GET "{CLAVE}:list"`
+
+Para ver el tipo de dato y el tiempo asignado por clave
+
+`TYPE "{CLAVE}:list"`
+`TTL "{CLAVE}:list"`
+
+
+

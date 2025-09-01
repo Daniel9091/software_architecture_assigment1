@@ -4,14 +4,37 @@ use serde::Serialize;
 use crate::{Db, repository};
 use crate::repository::books as books_repo;
 use crate::models::{ApiResponse, BookWithAuthor, CreateBook, UpdateBook};
+use crate::cache::Cache;
 
+
+// los voy a deja con los logs para despues poder demostrar que ocupa cahce
 #[get("/books")]
-pub async fn get_books(pool: &State<Db>) -> Json<ApiResponse<Vec<BookWithAuthor>>> {
+pub async fn get_books(
+    pool: &State<Db>,
+    cache: &Cache
+) -> Json<ApiResponse<Vec<BookWithAuthor>>> {
+    println!("🔍 Entrando a get_books");
+    // Usar constante desde cache.rs
+    let cache_key = Cache::KEY_BOOKS_LIST;
+    
+    // Intentar obtener del caché primero
+    if let Ok(cached_books) = cache.get::<Vec<BookWithAuthor>>(cache_key).await {
+        println!("✅ Datos obtenidos del CACHÉ");  // ← Log de caché
+        return Json(ApiResponse::success(cached_books));
+    }
+    println!("🔄 Obteniendo datos de la BASE DE DATOS");  // ← Log de BD
     match repository::get_all_books(&pool.0).await {
-        Ok(books) => Json(ApiResponse::success(books)),
+        Ok(books) => {
+            // Almacenar en caché por 5 minutos usando constante TTL
+            let _ = cache.set(cache_key, &books, Some(Cache::TTL_5_MIN)).await;
+            println!("💾 Datos guardados en CACHÉ");  // ← Log de guardado
+            Json(ApiResponse::success(books))
+        },
         Err(_) => Json(ApiResponse::<Vec<BookWithAuthor>>::error("Error al obtener libros")),
     }
 }
+
+
 
 #[get("/books/<id>")]
 pub async fn get_book(id: i32, pool: &State<Db>) -> Json<ApiResponse<BookWithAuthor>> {
