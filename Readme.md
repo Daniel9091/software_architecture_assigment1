@@ -76,28 +76,27 @@ curl http://localhost:8000/
 
 ## 🐦📁 Base de datos (db.sqlite)
 
-- NUNCA se reinicia con restart o up
 - Datos persisten ente reinicicios
-- Solo se pierden los datos si se elimina manualmente el archivo 
+- Solo se pierden los datos si se elimina manualmente el archivo
 
-## Caché (redis)
+### Manejo de BBDD con Doker
+
+#### Volumenes del Proyecto:
+`docker volume ls | grep software_architecture_assigment1`
+- `docker volume inspect software_architecture_assigment1_dbdata`
+- `docker volume inspect software_architecture_assigment1_redisdata`
+- `docker volume inspect software_architecture_assigment1_rust_target`
+
+#### Borrar vlolumens:
+- `docker volume rm {NOMBRE  BBDD}`
+- `docker-compose down -v`
+
+
+## Caché (Redis - BB8)
 - Reducion tiempo de respuesta
-- Dsiminucio de carga para BBDD
+- Dsiminucion de carga para BBDD
 - **Ventajas de Redis**: por mas documentacion y robustez
 - **Desventajas de Redis**: Mayor consumo de memoria y ligeramente mas compleja
 
-
-
-## 🛠️ Alternativa con Make (Segunda Opción) (preguntar si ya se elimino)
-
-Si prefieres comandos más cortos, puedes usar Make:
-
-```bash
-# Equivalente a Docker Compose:
-make up        # = docker-compose up -d
-make restart   # = docker-compose restart app
-make logs      # = docker-compose logs -f app
-make down      # = docker-compose down
-make build     # = docker-compose build
-```
-
+- **BB8**: Se encarga de las consecciones de pulling
+- **Cache.rs**: Archivo encargado de gestionar caché
