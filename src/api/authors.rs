@@ -1,5 +1,5 @@
 use rocket::{serde::json::Json, State};
-use rocket::serde::Serialize;
+use rocket::serde::{Serialize, Deserialize}; 
 use rocket_db_pools::sqlx::{self, Row};
 
 use crate::{models::*, repository, Db, cache::Cache};
@@ -27,14 +27,40 @@ pub async fn get_authors(
     }
 }
 
+
+// No se sabe donde se ocupa este endpoit
+// tiene implementado el cache igual
 #[get("/authors/<id>")]
-pub async fn get_author(id: i32, pool: &State<Db>) -> Json<ApiResponse<Author>> {
+pub async fn get_author(
+    id: i32, 
+    pool: &State<Db>,
+    cache: &Cache
+) -> Json<ApiResponse<Author>> {
+    println!("🔍 Entrando a get_author para id: {}", id);
+    let cache_key = format!("{}{}", Cache::KEY_AUTHOR_PREFIX, id);
+    
+    if let Ok(cached_author) = cache.get::<Author>(&cache_key).await {
+        println!("✅ Datos del autor {} obtenidos del CACHÉ", id);
+        return Json(ApiResponse::success(cached_author));
+    }
+    println!("🔄 Obteniendo datos del autor {} de la BASE DE DATOS", id);
     match repository::get_author_by_id(&pool.0, id).await {
-        Ok(Some(author)) => Json(ApiResponse::success(author)),
-        Ok(None) => Json(ApiResponse::<Author>::error("Autor no encontrado")),
-        Err(_) => Json(ApiResponse::<Author>::error("Error al obtener autor")),
+        Ok(Some(author)) => {
+            let _ = cache.set(&cache_key, &author, Some(Cache::TTL_5_MIN)).await;
+            println!("💾 Datos del autor {} guardados en CACHÉ", id);
+            Json(ApiResponse::success(author))
+        },
+        Ok(None) => {
+            println!("❌ Autor {} no encontrado", id);
+            Json(ApiResponse::<Author>::error("Autor no encontrado"))
+        },
+        Err(_) => {
+            println!("❌ Error al obtener autor {}", id);
+            Json(ApiResponse::<Author>::error("Error al obtener autor"))
+        },
     }
 }
+
 
 #[post("/authors", data = "<author>")]
 pub async fn create_author(author: Json<CreateAuthor>, pool: &State<Db>) -> Json<ApiResponse<i32>> {
@@ -62,7 +88,7 @@ pub async fn delete_author(id: i32, pool: &State<Db>) -> Json<ApiResponse<()>> {
 }
 
 /// DTO liviano para la lista de libros del autor
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct BookSummary {
     pub id: i32,
@@ -70,18 +96,32 @@ pub struct BookSummary {
     pub publication_date: Option<i32>,
 }
 
-
 /// Respuesta compuesta para el Show de autor
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct AuthorDetails {
     pub author: Author,
     pub books: Vec<BookSummary>,
 }
 
-/// GET /api/authors/<id>/details
+
+// GET /api/authors/<id>/details
+// Este enpoint se lleva toda la carga de obtener la informacion del autor y sus libros
 #[get("/authors/<id>/details")]
-pub async fn get_author_details(id: i32, pool: &State<Db>) -> Json<ApiResponse<AuthorDetails>> {
+pub async fn get_author_details(
+    id: i32, 
+    pool: &State<Db>,
+    cache: &Cache
+) -> Json<ApiResponse<AuthorDetails>> {
+    println!("🔍 Entrando a get_author_details para id: {}", id);
+    let cache_key = format!("{}{}", Cache::KEY_AUTHOR_DETAILS_PREFIX, id);
+    
+    if let Ok(cached_details) = cache.get::<AuthorDetails>(&cache_key).await {
+        println!("✅ Detalles del autor {} obtenidos del CACHÉ", id);
+        return Json(ApiResponse::success(cached_details));
+    }
+    println!("🔄 Obteniendo detalles del autor {} de la BASE DE DATOS", id);
+    
     // 1) Autor
     let author_opt = repository::get_author_by_id(&pool.0, id)
         .await
@@ -89,11 +129,12 @@ pub async fn get_author_details(id: i32, pool: &State<Db>) -> Json<ApiResponse<A
         .flatten();
 
     let Some(author) = author_opt else {
+        println!("❌ Autor {} no encontrado", id);
         return Json(ApiResponse::<AuthorDetails>::error("Autor no encontrado"));
     };
 
-    // 2) Libros del autor (sin macros; usamos `query` + `Row`)
-       let rows = sqlx::query(
+    // 2) Libros del autor
+    let rows = sqlx::query(
         r#"
         SELECT 
         id, 
@@ -117,5 +158,10 @@ pub async fn get_author_details(id: i32, pool: &State<Db>) -> Json<ApiResponse<A
             publication_date: r.get("publication_date"),
         })
         .collect();
-    Json(ApiResponse::success(AuthorDetails { author, books }))
+    
+    let author_details = AuthorDetails { author, books };
+    let _ = cache.set(&cache_key, &author_details, Some(Cache::TTL_5_MIN)).await;
+    println!("💾 Detalles del autor {} guardados en CACHÉ", id);
+    
+    Json(ApiResponse::success(author_details))
 }

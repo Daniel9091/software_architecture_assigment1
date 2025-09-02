@@ -23,6 +23,7 @@ impl Cache {
 
     pub const KEY_AUTHORS_LIST: &str = "authors:list"; 
     pub const KEY_AUTHOR_PREFIX: &str = "authors:id:";
+    pub const KEY_AUTHOR_DETAILS_PREFIX: &str = "authors:details:";
 
     pub const KEY_REVIEWS_PREFIX: &str = "reviews:book:";
     pub const KEY_SALES_PREFIX: &str = "sales:book:";
