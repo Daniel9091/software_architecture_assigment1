@@ -28,6 +28,8 @@ impl Cache {
     pub const KEY_REVIEWS_PREFIX: &str = "reviews:book:";
     pub const KEY_SALES_PREFIX: &str = "sales:book:";
 
+    pub const KEY_DASHBOARD_STATS: &str = "dashboard:stats";
+
     // Inicialización del caché con la URL de Redis
     // Argumenteos: redis_url: &str - URL de conexión a Redis
     // Retorna: Result<Self, Box<dyn std::error::Error>> - Instancia de Cache o error
