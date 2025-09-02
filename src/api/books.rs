@@ -35,15 +35,39 @@ pub async fn get_books(
 }
 
 
-
 #[get("/books/<id>")]
-pub async fn get_book(id: i32, pool: &State<Db>) -> Json<ApiResponse<BookWithAuthor>> {
+pub async fn get_book(
+    id: i32, 
+    pool: &State<Db>,
+    cache: &Cache
+) -> Json<ApiResponse<BookWithAuthor>> {
+    println!("🔍 Entrando a get_book para id: {}", id);
+    let cache_key = format!("{}{}", Cache::KEY_BOOK_PREFIX, id);
+    
+    if let Ok(cached_book) = cache.get::<BookWithAuthor>(&cache_key).await {
+        println!("✅ Datos del libro {} obtenidos del CACHÉ", id);
+        return Json(ApiResponse::success(cached_book));
+    }
+    println!("🔄 Obteniendo datos del libro {} de la BASE DE DATOS", id);
     match repository::get_book_by_id(&pool.0, id).await {
-        Ok(Some(book)) => Json(ApiResponse::success(book)),
-        Ok(None) => Json(ApiResponse::<BookWithAuthor>::error("Libro no encontrado")),
-        Err(_) => Json(ApiResponse::<BookWithAuthor>::error("Error al obtener libro")),
+        Ok(Some(book)) => {
+            let _ = cache.set(&cache_key, &book, Some(Cache::TTL_5_MIN)).await;
+            println!("💾 Datos del libro {} guardados en CACHÉ", id);
+            Json(ApiResponse::success(book))
+        },
+        Ok(None) => {
+            println!("❌ Libro {} no encontrado", id);
+            Json(ApiResponse::<BookWithAuthor>::error("Libro no encontrado"))
+        },
+        Err(_) => {
+            println!("❌ Error al obtener libro {}", id);
+            Json(ApiResponse::<BookWithAuthor>::error("Error al obtener libro"))
+        },
     }
 }
+
+// Para los siguietes enpoints no se uso cache por que el tiempo de permanencia en el cache es muy bajo
+// Esto evita complejidad innecesaria (hablado con el profesor)
 
 #[post("/books", data = "<book>")]
 pub async fn create_book(book: Json<CreateBook>, pool: &State<Db>) -> Json<ApiResponse<i32>> {

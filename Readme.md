@@ -126,3 +126,5 @@ Para ver el tipo de dato y el tiempo asignado por clave
 
 
 
+implementado para index y show de libro
+el profesor comento que esta bien que solo se quede 5 min la informacion y que no es nesesario borrar nada 

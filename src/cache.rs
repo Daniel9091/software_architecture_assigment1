@@ -20,8 +20,10 @@ impl Cache {
     //Patrones de claves
     pub const KEY_BOOKS_LIST: &str = "books:list";
     pub const KEY_BOOK_PREFIX: &str = "books:id:";
+
     pub const KEY_AUTHORS_LIST: &str = "authors:list"; 
     pub const KEY_AUTHOR_PREFIX: &str = "authors:id:";
+
     pub const KEY_REVIEWS_PREFIX: &str = "reviews:book:";
     pub const KEY_SALES_PREFIX: &str = "sales:book:";
 
@@ -59,8 +61,6 @@ impl Cache {
         None => Err(RedisError::from((bb8_redis::redis::ErrorKind::TypeError, "Key not found")))
     }
 }
-
-
 
     // Establecer un valor en el caché (SET) con opción de TTL
     // Argumentos:

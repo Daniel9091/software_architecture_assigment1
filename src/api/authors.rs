@@ -2,12 +2,27 @@ use rocket::{serde::json::Json, State};
 use rocket::serde::Serialize;
 use rocket_db_pools::sqlx::{self, Row};
 
-use crate::{models::*, repository, Db};
+use crate::{models::*, repository, Db, cache::Cache};
 
 #[get("/authors")]
-pub async fn get_authors(pool: &State<Db>) -> Json<ApiResponse<Vec<Author>>> {
+pub async fn get_authors(
+    pool: &State<Db>,
+    cache: &Cache
+) -> Json<ApiResponse<Vec<Author>>> {
+    println!("🔍 Entrando a get_authors");
+    let cache_key = Cache::KEY_AUTHORS_LIST;
+    
+    if let Ok(cached_authors) = cache.get::<Vec<Author>>(cache_key).await {
+        println!("✅ Datos de autores obtenidos del CACHÉ");
+        return Json(ApiResponse::success(cached_authors));
+    }
+    println!("🔄 Obteniendo datos de autores de la BASE DE DATOS");
     match repository::get_all_authors(&pool.0).await {
-        Ok(authors) => Json(ApiResponse::success(authors)),
+        Ok(authors) => {
+            let _ = cache.set(cache_key, &authors, Some(Cache::TTL_5_MIN)).await;
+            println!("💾 Datos de autores guardados en CACHÉ");
+            Json(ApiResponse::success(authors))
+        },
         Err(_) => Json(ApiResponse::<Vec<Author>>::error("Error al obtener autores")),
     }
 }
