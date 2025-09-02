@@ -1,12 +1,29 @@
 use rocket::{serde::json::Json, State};
-use crate::{models::*, repository};
+use crate::{models::*, repository, cache::Cache};
 use crate::models::ApiResponse;
 use crate::Db;
 
 #[get("/books/<book_id>/sales")]
-pub async fn get_book_sales(book_id: i32, pool: &State<Db>) -> Json<ApiResponse<Vec<YearlySalesWithBook>>> {
+pub async fn get_book_sales(
+    book_id: i32, 
+    pool: &State<Db>,
+    cache: &Cache
+) -> Json<ApiResponse<Vec<YearlySalesWithBook>>> {
+    println!("🔍 Entrando a get_book_sales para book_id: {}", book_id);
+    let cache_key = format!("{}{}", Cache::KEY_SALES_PREFIX, book_id);
+    
+    if let Ok(cached_sales) = cache.get::<Vec<YearlySalesWithBook>>(&cache_key).await {
+        println!("✅ Datos de ventas del libro {} obtenidos del CACHÉ", book_id);
+        return Json(ApiResponse::success(cached_sales));
+    }
+    println!("🔄 Obteniendo datos de ventas del libro {} de la BASE DE DATOS", book_id);
+    
     match repository::get_yearly_sales_by_book(&pool.0, book_id).await {
-        Ok(sales) => Json(ApiResponse::success(sales)),
+        Ok(sales) => {
+            let _ = cache.set(&cache_key, &sales, Some(Cache::TTL_5_MIN)).await;
+            println!("💾 Datos de ventas del libro {} guardados en CACHÉ", book_id);
+            Json(ApiResponse::success(sales))
+        },
         Err(_) => Json(ApiResponse::<Vec<YearlySalesWithBook>>::error("Error al obtener ventas")),
     }
 }
