@@ -87,44 +87,45 @@ curl http://localhost:8000/
 - `docker volume inspect software_architecture_assigment1_redisdata`
 - `docker volume inspect software_architecture_assigment1_rust_target`
 
-#### Borrar vlolumens:
+#### Borrar volumenes:
 - `docker volume rm {NOMBRE  BBDD}`
 - `docker-compose down -v`
 
-
 ## Caché (Redis - BB8)
+### Ventajas de ocupar Cache:
 - Reducion tiempo de respuesta
-- Dsiminucion de carga para BBDD
-- **Ventajas de Redis**: por mas documentacion y robustez
-- **Desventajas de Redis**: Mayor consumo de memoria y ligeramente mas compleja
+- Dsminucion de carga para BBDD
+### Ventajas y Desventajas de Redis
+- **Ventajas**: Mas documentacion y robustez
+- **Desventajas**: Mayor consumo de memoria y ligeramente mas compleja
 
-- **BB8**: Se encarga de las consecciones de pulling
+### Caracteristicas Importantes:
+- **BB8**: Se encarga de las consecciones de pulling de Redis
 - **Cache.rs**: Archivo encargado de gestionar caché
-- caché de 5 minutos para casi todas las rutas API
+- **Constantes**: Los nombres de las llaves en el caché y el tiempo TTL se manejan como CTE en Cache.rs
+- **TTL**: Se considero tiempo prudente 5 minutos en el caché
+- **Rutas Implementadas**: Solo se consideran las rutas GET para el cahce ya que el tiempo TTL es bajo, se añade demasiada complejidad inesesariamente si se implementa el borrado del cahce con las otras rutas (Fue comberzado explisitamente con el profesor)
 
 ### Visualisacion del Archvio de Caché
-En otra terminal ingrese este comando para conecarse al cache
-
-`docker exec -it software_architecture_assigment1-redis-1 redis-cli`
-
-Para ver las claves que contiene en la terminal emergente ejecute
-
-`KEYS *`
-
-Para ver una clave espesifica
-
-`KEYS {CLAVE}:*`
-
-Para ver el contenido espesifico de la clave
-
-`GET "{CLAVE}:list"`
-
-Para ver el tipo de dato y el tiempo asignado por clave
-
-`TYPE "{CLAVE}:list"`
-`TTL "{CLAVE}:list"`
 
 
+```bash
+# 1. Ingreso al Caché (Abra otra terminal y ingrese comando)
+docker exec -it software_architecture_assigment1-redis-1 redis-cli
 
-implementado para index y show de libro
-el profesor comento que esta bien que solo se quede 5 min la informacion y que no es nesesario borrar nada 
+# 2. Revision de keys guardadas en el Caché
+KEYS *
+KEYS {KEY}:*    # (Mas Espesifico)
+KEYS *:{KEY}    # (Mas Espesifico)
+
+# 3. Ver una clave espesifica
+GET {KEY}
+
+# 4. Ver tipo de dato
+TYPE {KEY}
+
+# Ver que le queda a la clave en el caché
+TTL {KEY}
+```
+
+
