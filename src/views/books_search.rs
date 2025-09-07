@@ -16,8 +16,6 @@ pub async fn books_search_page() -> RawHtml<String> {
         .row-actions { white-space: nowrap; }
       </style>
 
-      <h1>Búsqueda de libros por descripción</h1>
-
       <form id="search-form" onsubmit="doSearch(1); return false;">
         <input id="q" name="q" type="text" placeholder="Palabras a buscar en la descripción..." style="width: 60%;" />
         <button type="submit">Buscar</button>
@@ -135,5 +133,5 @@ pub async fn books_search_page() -> RawHtml<String> {
       </script>
     "#;
 
-    RawHtml(render_page("Buscar libros", body))
+    RawHtml(render_page("Búsqueda de libros por descripción", body))
 }

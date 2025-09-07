@@ -1,0 +1,49 @@
+== direct-10-20250907-121902-docker-stats.csv
+hopeful_einstein avg_mem=14.20MiB samples=40
+software_architecture_assigment1-redis-1 avg_mem=9.48MiB samples=41
+traefik avg_mem=60.31MiB samples=41
+software_architecture_assigment1-app-1 avg_mem=10.96MiB samples=41
+
+== direct-100-20250907-122404-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_mem=9.50MiB samples=41
+traefik avg_mem=60.31MiB samples=41
+busy_heyrovsky avg_mem=13.80MiB samples=41
+software_architecture_assigment1-app-1 avg_mem=10.99MiB samples=41
+
+== direct-1000-20250907-122906-docker-stats.csv
+friendly_agnesi avg_mem=15.11MiB samples=41
+software_architecture_assigment1-redis-1 avg_mem=9.48MiB samples=41
+traefik avg_mem=60.30MiB samples=41
+software_architecture_assigment1-app-1 avg_mem=11.05MiB samples=41
+
+== direct-5000-20250907-123413-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_mem=9.41MiB samples=45
+peaceful_ramanujan avg_mem=16.41MiB samples=45
+traefik avg_mem=60.30MiB samples=45
+software_architecture_assigment1-app-1 avg_mem=11.04MiB samples=45
+
+== traefik-10-20250907-115806-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_mem=9.47MiB samples=41
+romantic_almeida avg_mem=13.68MiB samples=40
+traefik avg_mem=36.70MiB samples=41
+vibrant_shamir avg_mem=11.24MiB samples=1
+software_architecture_assigment1-app-1 avg_mem=10.75MiB samples=41
+
+== traefik-100-20250907-120307-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_mem=9.51MiB samples=41
+traefik avg_mem=39.25MiB samples=41
+vibrant_shamir avg_mem=14.13MiB samples=41
+software_architecture_assigment1-app-1 avg_mem=10.80MiB samples=41
+
+== traefik-1000-20250907-120810-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_mem=9.44MiB samples=42
+traefik avg_mem=52.48MiB samples=42
+mystifying_lumiere avg_mem=14.56MiB samples=42
+software_architecture_assigment1-app-1 avg_mem=10.80MiB samples=42
+
+== traefik-5000-20250907-121322-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_mem=9.38MiB samples=46
+traefik avg_mem=58.55MiB samples=46
+awesome_goldberg avg_mem=17.46MiB samples=46
+software_architecture_assigment1-app-1 avg_mem=10.83MiB samples=46
+

@@ -19,7 +19,6 @@ pub async fn sales_by_book(book_id: i32, _pool: &State<Db>) -> RawHtml<String> {
         input[type='number'] {{ width: 120px; padding:.25rem; }}
       </style>
 
-      <h1>Ventas por año</h1>
       <div class="toolbar">
         <a class="btn" href="/books/{book_id}">← Volver al libro</a>
         <span id="bookTitle" class="muted"></span>

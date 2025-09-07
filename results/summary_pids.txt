@@ -1,0 +1,49 @@
+== direct-10-20250907-121902-docker-stats.csv
+hopeful_einstein avg_pids=12.9 samples=40
+software_architecture_assigment1-redis-1 avg_pids=6.0 samples=41
+traefik avg_pids=14.0 samples=41
+software_architecture_assigment1-app-1 avg_pids=14.0 samples=41
+
+== direct-100-20250907-122404-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_pids=6.0 samples=41
+traefik avg_pids=14.0 samples=41
+busy_heyrovsky avg_pids=12.0 samples=41
+software_architecture_assigment1-app-1 avg_pids=13.7 samples=41
+
+== direct-1000-20250907-122906-docker-stats.csv
+friendly_agnesi avg_pids=12.8 samples=41
+software_architecture_assigment1-redis-1 avg_pids=6.0 samples=41
+traefik avg_pids=14.0 samples=41
+software_architecture_assigment1-app-1 avg_pids=13.0 samples=41
+
+== direct-5000-20250907-123413-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_pids=6.0 samples=45
+peaceful_ramanujan avg_pids=12.8 samples=45
+traefik avg_pids=14.0 samples=45
+software_architecture_assigment1-app-1 avg_pids=13.0 samples=45
+
+== traefik-10-20250907-115806-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_pids=6.0 samples=41
+romantic_almeida avg_pids=12.8 samples=40
+traefik avg_pids=10.0 samples=41
+vibrant_shamir avg_pids=9.0 samples=1
+software_architecture_assigment1-app-1 avg_pids=14.0 samples=41
+
+== traefik-100-20250907-120307-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_pids=6.0 samples=41
+traefik avg_pids=10.9 samples=41
+vibrant_shamir avg_pids=12.9 samples=41
+software_architecture_assigment1-app-1 avg_pids=14.0 samples=41
+
+== traefik-1000-20250907-120810-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_pids=6.0 samples=42
+traefik avg_pids=11.7 samples=42
+mystifying_lumiere avg_pids=12.7 samples=42
+software_architecture_assigment1-app-1 avg_pids=14.0 samples=42
+
+== traefik-5000-20250907-121322-docker-stats.csv
+software_architecture_assigment1-redis-1 avg_pids=6.0 samples=46
+traefik avg_pids=13.8 samples=46
+awesome_goldberg avg_pids=12.8 samples=46
+software_architecture_assigment1-app-1 avg_pids=14.0 samples=46
+
