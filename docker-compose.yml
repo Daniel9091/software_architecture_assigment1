@@ -3,35 +3,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    image: myapp:latest
     environment:
-      - ROCKET_ENV=development
-      - ROCKET_LOG_LEVEL=debug
-      - ROCKET_ADDRESS=0.0.0.0
-      - ROCKET_PORT=8000
-      - REDIS_URL=redis://redis:6379
+      - SERVE_STATIC=true             # ← Rocket monta /static y /uploads
+      - UPLOAD_DIR=public/uploads
+    volumes:
+      - ./public:/app/public:ro       # ← para que FileServer vea /app/public/*
+    ports:
+      - "8000:8000"                   # ← acceso directo sin proxy
     depends_on:
       - redis
-    volumes:
-      - dbdata:/data
-      - ./src:/app/src
-      - rust_target:/app/target
-      - ./migrations:/app/migrations:ro
-      - ./Cargo.toml:/app/Cargo.toml:ro
-      - ./Cargo.lock:/app/Cargo.lock:rw
-      - ./Rocket.toml:/app/Rocket.toml:ro
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    volumes:
-      - redisdata:/data
     restart: unless-stopped
-
-volumes:
-  dbdata:
-  rust_target:
-  redisdata:

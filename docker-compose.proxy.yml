@@ -1,34 +1,91 @@
 services:
   traefik:
-    image: traefik:v3.1
-    container_name: traefik
+    image: traefik:v3.0
     command:
       - --providers.docker=true
       - --entrypoints.web.address=:80
       - --api.dashboard=true
-      - --api.insecure=true         # DEV: dashboard en :8080
+      - --api.insecure=true
       - --accesslog=true
-      - --accesslog.format=json
-      - --accesslog.filepath=/logs/access.json
-      - --metrics.prometheus=true
-      - --entryPoints.metrics.address=:8082
-      - --metrics.prometheus.entryPoint=metrics
     ports:
       - "80:80"
       - "8080:8080"
-      - "8082:8082"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./logs:/logs
-    networks: [web]
+    networks: [traefik_net]
+    restart: unless-stopped
 
-  app:
+  static:
+    image: nginx:alpine
+    volumes:
+      - ./public:/usr/share/nginx/html:ro
+    networks: [traefik_net]
     labels:
       - traefik.enable=true
-      - traefik.http.routers.app.rule=PathPrefix(`/`)
+      - traefik.docker.network=traefik_net
+      - traefik.http.routers.static.entrypoints=web
+      - traefik.http.routers.static.rule=Host(`app.localhost`) && PathPrefix(`/static`)
+      - traefik.http.services.static.loadbalancer.server.port=80
+    restart: unless-stopped
+
+  # ✅ Réplicas balanceadas por Traefik
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: myapp:latest
+    environment:
+      - SERVE_STATIC=false
+      - UPLOAD_DIR=public/uploads
+      # 🔽🔽🔽 OpenSearch
+      - USE_OPENSEARCH=1
+      - OS_NODE=https://opensearch:9200
+      - OS_USER=admin
+      - OS_PASS=TambienAhiB12345@.
+      - OS_INDEX_BOOKS=books
+      - OS_INDEX_REVIEWS=reviews
+    volumes:
+      - ./public:/app/public:ro
+    depends_on:
+      - redis
+    networks: [traefik_net]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_net
       - traefik.http.routers.app.entrypoints=web
+      - traefik.http.routers.app.rule=Host(`app.localhost`)
       - traefik.http.services.app.loadbalancer.server.port=8000
-    networks: [web]
+    restart: unless-stopped
+
+  # ✅ Instancia directa (para pruebas sin Traefik)
+  app_direct:
+    image: myapp:latest
+    environment:
+      - SERVE_STATIC=true
+      - UPLOAD_DIR=public/uploads
+      # (opcional) también con OpenSearch para probar directo:
+      - USE_OPENSEARCH=1
+      - OS_NODE=https://opensearch:9200
+      - OS_USER=admin
+      - OS_PASS=TambienAhiB12345@.
+      - OS_INDEX_BOOKS=books
+      - OS_INDEX_REVIEWS=reviews
+    volumes:
+      - ./public:/app/public:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    networks: [traefik_net]
+    labels:
+      - traefik.enable=false
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    networks: [traefik_net]
+    restart: unless-stopped
 
 networks:
-  web: {}
+  traefik_net:
+    external: true
